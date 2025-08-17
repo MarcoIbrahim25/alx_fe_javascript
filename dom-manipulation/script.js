@@ -22,6 +22,7 @@ function createAddForm() {
   catInput.placeholder = "Enter category";
   const addBtn = document.createElement("button");
   addBtn.textContent = "Add";
+
   addBtn.onclick = () => {
     const t = (textInput.value || "").trim();
     const c = (catInput.value || "").trim() || "General";
