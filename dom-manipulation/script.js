@@ -94,23 +94,35 @@ function createAddQuoteForm() {
   catInput.placeholder = "Enter quote category";
   const addBtn = document.createElement("button");
   addBtn.textContent = "Add Quote";
-  addBtn.addEventListener("click", () => {
+  addBtn.addEventListener("click", async () => {
     const t = (textInput.value || "").trim();
     const c = (catInput.value || "").trim() || "General";
     if (t.length < 3) return;
     const before = new Set(quotes.map((q) => (q.category || "General").trim()));
-    quotes.push({ text: t, category: c });
+    const newQ = { text: t, category: c };
+    quotes.push(newQ);
     saveQuotes();
     const after = new Set(quotes.map((q) => (q.category || "General").trim()));
     if (after.size !== before.size) populateCategories();
     textInput.value = "";
     catInput.value = "";
     filterQuotes();
+    await postQuoteToServer(newQ);
   });
   box.appendChild(textInput);
   box.appendChild(catInput);
   box.appendChild(addBtn);
   document.body.appendChild(box);
+}
+
+async function postQuoteToServer(quote) {
+  try {
+    await fetch(SERVER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: quote.text, body: quote.category }),
+    });
+  } catch (_) {}
 }
 
 async function fetchQuotesFromServer() {
