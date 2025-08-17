@@ -1,5 +1,6 @@
 const STORAGE_KEY = "quotes_json_v1";
 const SELECTED_CATEGORY_KEY = "selectedCategory";
+const SERVER_URL = "https://jsonplaceholder.typicode.com/posts";
 
 const quotesDefault = [
   { text: "Stay hungry, stay foolish.", category: "Motivation" },
@@ -12,6 +13,8 @@ let quotes = loadQuotes();
 const quoteDisplay = document.getElementById("quoteDisplay");
 const newQuoteBtn = document.getElementById("newQuote");
 const categoryFilter = document.getElementById("categoryFilter");
+const syncStatus = document.getElementById("syncStatus");
+const syncNowBtn = document.getElementById("syncNow");
 
 function loadQuotes() {
   const s = localStorage.getItem(STORAGE_KEY);
@@ -33,6 +36,7 @@ function escapeHTML(s) {
 }
 
 function populateCategories() {
+  if (!categoryFilter) return;
   categoryFilter.innerHTML = `<option value="all">All Categories</option>`;
   const cats = Array.from(
     new Set(quotes.map((q) => (q.category || "General").trim()).filter(Boolean))
@@ -59,11 +63,11 @@ function displayRandomQuoteFromPool(pool) {
   quoteDisplay.innerHTML = `<blockquote><p>${t}</p><small>#${c}</small></blockquote>`;
 }
 
-function displayRandomQuote() {
-  filterQuotes();
-}
-
 function filterQuotes() {
+  if (!categoryFilter) {
+    displayRandomQuoteFromPool(quotes);
+    return;
+  }
   const selectedCategory = categoryFilter.value;
   localStorage.setItem(SELECTED_CATEGORY_KEY, selectedCategory);
   const pool =
@@ -77,6 +81,9 @@ function filterQuotes() {
   displayRandomQuoteFromPool(pool);
 }
 
+function displayRandomQuote() {
+  filterQuotes();
+}
 function showRandomQuote() {
   filterQuotes();
 }
@@ -91,7 +98,7 @@ function createAddQuoteForm() {
   catInput.placeholder = "Enter quote category";
   const addBtn = document.createElement("button");
   addBtn.textContent = "Add Quote";
-  addBtn.addEventListener("click", () => {
+  addBtn.addEventListener("click", async () => {
     const t = (textInput.value || "").trim();
     const c = (catInput.value || "").trim() || "General";
     if (t.length < 3) return;
@@ -103,6 +110,13 @@ function createAddQuoteForm() {
     textInput.value = "";
     catInput.value = "";
     filterQuotes();
+    try {
+      await fetch(SERVER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: t, body: c }),
+      });
+    } catch (_) {}
   });
   box.appendChild(textInput);
   box.appendChild(catInput);
@@ -110,7 +124,61 @@ function createAddQuoteForm() {
   document.body.appendChild(box);
 }
 
+async function fetchServerQuotes() {
+  const res = await fetch(`${SERVER_URL}?_limit=5`);
+  const data = await res.json();
+  return data.map((it) => ({ text: it.title, category: "Server" }));
+}
+
+function resolveConflictsServerWins(localArr, serverArr) {
+  const localMap = new Map(
+    localArr.map((q) => [q.text.trim().toLowerCase(), q])
+  );
+  const serverMap = new Map(
+    serverArr.map((q) => [q.text.trim().toLowerCase(), q])
+  );
+  let added = 0,
+    conflicts = 0;
+  serverMap.forEach((srvQ, key) => {
+    const locQ = localMap.get(key);
+    if (!locQ) {
+      localArr.push(srvQ);
+      added++;
+    } else if ((locQ.category || "General") !== (srvQ.category || "General")) {
+      locQ.category = srvQ.category;
+      conflicts++;
+    }
+  });
+  return { added, conflicts };
+}
+
+function setStatus(msg) {
+  if (syncStatus) syncStatus.innerHTML = msg || "";
+}
+
+async function syncWithServer() {
+  try {
+    setStatus("Syncing...");
+    const serverQuotes = await fetchServerQuotes();
+    const before = new Set(quotes.map((q) => (q.category || "General").trim()));
+    const result = resolveConflictsServerWins(quotes, serverQuotes);
+    saveQuotes();
+    const after = new Set(quotes.map((q) => (q.category || "General").trim()));
+    if (after.size !== before.size) populateCategories();
+    filterQuotes();
+    setStatus(
+      `Synced. Added: ${result.added}, Conflicts resolved: ${result.conflicts}`
+    );
+    setTimeout(() => setStatus(""), 3000);
+  } catch (_) {
+    setStatus("Sync failed");
+    setTimeout(() => setStatus(""), 3000);
+  }
+}
+
 createAddQuoteForm();
 populateCategories();
 filterQuotes();
 newQuoteBtn.addEventListener("click", showRandomQuote);
+if (syncNowBtn) syncNowBtn.addEventListener("click", syncWithServer);
+setInterval(syncWithServer, 15000);
