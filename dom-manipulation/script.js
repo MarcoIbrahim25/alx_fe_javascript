@@ -170,6 +170,7 @@ async function syncQuotes() {
     setStatus(
       `Synced. Added: ${result.added}, Conflicts resolved: ${result.conflicts}`
     );
+    alert("Quotes synced with server!");
     setTimeout(() => setStatus(""), 3000);
   } catch (_) {
     setStatus("Sync failed");
