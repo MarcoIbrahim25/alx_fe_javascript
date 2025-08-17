@@ -157,7 +157,7 @@ function setStatus(msg) {
   if (syncStatus) syncStatus.innerHTML = msg || "";
 }
 
-async function syncWithServer() {
+async function syncQuotes() {
   try {
     setStatus("Syncing...");
     const serverQuotes = await fetchQuotesFromServer();
@@ -181,5 +181,5 @@ createAddQuoteForm();
 populateCategories();
 filterQuotes();
 newQuoteBtn.addEventListener("click", showRandomQuote);
-if (syncNowBtn) syncNowBtn.addEventListener("click", syncWithServer);
-setInterval(syncWithServer, 15000);
+if (syncNowBtn) syncNowBtn.addEventListener("click", syncQuotes);
+setInterval(syncQuotes, 15000);
