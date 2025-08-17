@@ -1,5 +1,5 @@
 const STORAGE_KEY = "quotes_json_v1";
-const LAST_FILTER_KEY = "last_category_filter_v1";
+const SELECTED_CATEGORY_KEY = "selectedCategory";
 
 const quotesDefault = [
   { text: "Stay hungry, stay foolish.", category: "Motivation" },
@@ -43,7 +43,7 @@ function populateCategories() {
     opt.textContent = c;
     categoryFilter.appendChild(opt);
   });
-  const saved = localStorage.getItem(LAST_FILTER_KEY);
+  const saved = localStorage.getItem(SELECTED_CATEGORY_KEY);
   if (saved && (saved === "all" || cats.includes(saved)))
     categoryFilter.value = saved;
 }
@@ -59,16 +59,20 @@ function displayRandomQuoteFromPool(pool) {
   quoteDisplay.innerHTML = `<blockquote><p>${t}</p><small>#${c}</small></blockquote>`;
 }
 
+function displayRandomQuote() {
+  filterQuotes();
+}
+
 function filterQuotes() {
-  const sel = categoryFilter.value;
-  localStorage.setItem(LAST_FILTER_KEY, sel);
+  const selectedCategory = categoryFilter.value;
+  localStorage.setItem(SELECTED_CATEGORY_KEY, selectedCategory);
   const pool =
-    sel === "all"
+    selectedCategory === "all"
       ? quotes
       : quotes.filter(
           (q) =>
             (q.category || "General").trim().toLowerCase() ===
-            sel.trim().toLowerCase()
+            selectedCategory.trim().toLowerCase()
         );
   displayRandomQuoteFromPool(pool);
 }
