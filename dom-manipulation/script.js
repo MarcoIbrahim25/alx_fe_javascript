@@ -7,35 +7,42 @@ const quotes = [
 const quoteDisplay = document.getElementById("quoteDisplay");
 const newQuoteBtn = document.getElementById("newQuote");
 
-function showRandomQuote() {
+function escapeHTML(s) {
+  const d = document.createElement("div");
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function displayRandomQuote() {
   const q = quotes[Math.floor(Math.random() * quotes.length)];
-  quoteDisplay.textContent = `${q.text}  (#${q.category})`;
+  quoteDisplay.innerHTML = `<blockquote><p>${escapeHTML(q.text)}</p><small>#${
+    q.category || "General"
+  }</small></blockquote>`;
 }
 
-function createAddForm() {
-  const wrap = document.createElement("div");
-  const textInput = document.createElement("input");
-  textInput.type = "text";
-  textInput.placeholder = "Enter a new quote";
-  const catInput = document.createElement("input");
-  catInput.type = "text";
-  catInput.placeholder = "Enter category";
-  const addBtn = document.createElement("button");
-  addBtn.textContent = "Add";
-
-  addBtn.onclick = () => {
-    const t = (textInput.value || "").trim();
-    const c = (catInput.value || "").trim() || "General";
-    if (t.length < 3) return;
-    quotes.push({ text: t, category: c });
-    textInput.value = "";
-    catInput.value = "";
-    showRandomQuote();
-  };
-  wrap.append(textInput, catInput, addBtn);
-  document.body.insertBefore(wrap, newQuoteBtn);
+function createAddQuoteForm() {
+  const box = document.createElement("div");
+  box.innerHTML = `
+    <input id="newQuoteText" type="text" placeholder="Enter a new quote">
+    <input id="newQuoteCategory" type="text" placeholder="Enter quote category">
+    <button id="addQuoteBtn">Add Quote</button>
+  `;
+  document.body.insertBefore(box, newQuoteBtn);
+  document.getElementById("addQuoteBtn").addEventListener("click", addQuote);
 }
 
-createAddForm();
-showRandomQuote();
-newQuoteBtn.addEventListener("click", showRandomQuote);
+function addQuote() {
+  const t = (document.getElementById("newQuoteText").value || "").trim();
+  const c =
+    (document.getElementById("newQuoteCategory").value || "").trim() ||
+    "General";
+  if (t.length < 3) return;
+  quotes.push({ text: t, category: c });
+  document.getElementById("newQuoteText").value = "";
+  document.getElementById("newQuoteCategory").value = "";
+  displayRandomQuote();
+}
+
+createAddQuoteForm();
+displayRandomQuote();
+newQuoteBtn.addEventListener("click", displayRandomQuote);
