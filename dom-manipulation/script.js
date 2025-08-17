@@ -15,9 +15,9 @@ function escapeHTML(s) {
 
 function displayRandomQuote() {
   const q = quotes[Math.floor(Math.random() * quotes.length)];
-  const text = escapeHTML(q.text || "");
-  const cat = escapeHTML(q.category || "General");
-  quoteDisplay.innerHTML = `<blockquote><p>${text}</p><small>#${cat}</small></blockquote>`;
+  const t = escapeHTML(q.text || "");
+  const c = escapeHTML(q.category || "General");
+  quoteDisplay.innerHTML = `<blockquote><p>${t}</p><small>#${c}</small></blockquote>`;
 }
 
 function showRandomQuote() {
@@ -26,24 +26,27 @@ function showRandomQuote() {
 
 function createAddQuoteForm() {
   const box = document.createElement("div");
-  box.innerHTML = `
-    <input id="newQuoteText" type="text" placeholder="Enter a new quote">
-    <input id="newQuoteCategory" type="text" placeholder="Enter quote category">
-    <button id="addQuoteBtn" onclick="addQuote()">Add Quote</button>
-  `;
-  document.body.insertBefore(box, newQuoteBtn);
-}
-
-function addQuote() {
-  const t = (document.getElementById("newQuoteText").value || "").trim();
-  const c =
-    (document.getElementById("newQuoteCategory").value || "").trim() ||
-    "General";
-  if (t.length < 3) return;
-  quotes.push({ text: t, category: c });
-  document.getElementById("newQuoteText").value = "";
-  document.getElementById("newQuoteCategory").value = "";
-  showRandomQuote();
+  const textInput = document.createElement("input");
+  textInput.type = "text";
+  textInput.placeholder = "Enter a new quote";
+  const catInput = document.createElement("input");
+  catInput.type = "text";
+  catInput.placeholder = "Enter quote category";
+  const addBtn = document.createElement("button");
+  addBtn.textContent = "Add Quote";
+  addBtn.addEventListener("click", () => {
+    const t = (textInput.value || "").trim();
+    const c = (catInput.value || "").trim() || "General";
+    if (t.length < 3) return;
+    quotes.push({ text: t, category: c });
+    textInput.value = "";
+    catInput.value = "";
+    showRandomQuote();
+  });
+  box.appendChild(textInput);
+  box.appendChild(catInput);
+  box.appendChild(addBtn);
+  document.body.appendChild(box);
 }
 
 createAddQuoteForm();
