@@ -15,9 +15,13 @@ function escapeHTML(s) {
 
 function displayRandomQuote() {
   const q = quotes[Math.floor(Math.random() * quotes.length)];
-  quoteDisplay.innerHTML = `<blockquote><p>${escapeHTML(q.text)}</p><small>#${
-    q.category || "General"
-  }</small></blockquote>`;
+  const text = escapeHTML(q.text || "");
+  const cat = escapeHTML(q.category || "General");
+  quoteDisplay.innerHTML = `<blockquote><p>${text}</p><small>#${cat}</small></blockquote>`;
+}
+
+function showRandomQuote() {
+  displayRandomQuote();
 }
 
 function createAddQuoteForm() {
@@ -25,10 +29,9 @@ function createAddQuoteForm() {
   box.innerHTML = `
     <input id="newQuoteText" type="text" placeholder="Enter a new quote">
     <input id="newQuoteCategory" type="text" placeholder="Enter quote category">
-    <button id="addQuoteBtn">Add Quote</button>
+    <button id="addQuoteBtn" onclick="addQuote()">Add Quote</button>
   `;
   document.body.insertBefore(box, newQuoteBtn);
-  document.getElementById("addQuoteBtn").addEventListener("click", addQuote);
 }
 
 function addQuote() {
@@ -40,9 +43,9 @@ function addQuote() {
   quotes.push({ text: t, category: c });
   document.getElementById("newQuoteText").value = "";
   document.getElementById("newQuoteCategory").value = "";
-  displayRandomQuote();
+  showRandomQuote();
 }
 
 createAddQuoteForm();
-displayRandomQuote();
-newQuoteBtn.addEventListener("click", displayRandomQuote);
+showRandomQuote();
+newQuoteBtn.addEventListener("click", showRandomQuote);
