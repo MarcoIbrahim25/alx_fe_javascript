@@ -64,11 +64,7 @@ function displayRandomQuoteFromPool(pool) {
 }
 
 function filterQuotes() {
-  if (!categoryFilter) {
-    displayRandomQuoteFromPool(quotes);
-    return;
-  }
-  const selectedCategory = categoryFilter.value;
+  const selectedCategory = categoryFilter ? categoryFilter.value : "all";
   localStorage.setItem(SELECTED_CATEGORY_KEY, selectedCategory);
   const pool =
     selectedCategory === "all"
@@ -98,7 +94,7 @@ function createAddQuoteForm() {
   catInput.placeholder = "Enter quote category";
   const addBtn = document.createElement("button");
   addBtn.textContent = "Add Quote";
-  addBtn.addEventListener("click", async () => {
+  addBtn.addEventListener("click", () => {
     const t = (textInput.value || "").trim();
     const c = (catInput.value || "").trim() || "General";
     if (t.length < 3) return;
@@ -110,13 +106,6 @@ function createAddQuoteForm() {
     textInput.value = "";
     catInput.value = "";
     filterQuotes();
-    try {
-      await fetch(SERVER_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: t, body: c }),
-      });
-    } catch (_) {}
   });
   box.appendChild(textInput);
   box.appendChild(catInput);
@@ -124,7 +113,7 @@ function createAddQuoteForm() {
   document.body.appendChild(box);
 }
 
-async function fetchServerQuotes() {
+async function fetchQuotesFromServer() {
   const res = await fetch(`${SERVER_URL}?_limit=5`);
   const data = await res.json();
   return data.map((it) => ({ text: it.title, category: "Server" }));
@@ -159,7 +148,7 @@ function setStatus(msg) {
 async function syncWithServer() {
   try {
     setStatus("Syncing...");
-    const serverQuotes = await fetchServerQuotes();
+    const serverQuotes = await fetchQuotesFromServer();
     const before = new Set(quotes.map((q) => (q.category || "General").trim()));
     const result = resolveConflictsServerWins(quotes, serverQuotes);
     saveQuotes();
